@@ -1,10 +1,12 @@
 # Qwen3.8-27B MTP: the flag was free the whole time
 
-One llama.cpp flag unlocks +33-39% decode speed for Qwen3.8-27B on consumer GPUs. No new files, no conversion, no custom build. The MTP head already ships inside the GGUF you downloaded on launch night.
+One llama.cpp flag unlocks +33% to +107% decode speed for Qwen3.8-27B on consumer GPUs, depending on the card. No new files, no conversion, no custom build. The MTP head already ships inside the GGUF you downloaded on launch night.
 
-Measured hours after the Aug 14 2026 release, published so every 24GB card owner gets the speed on day one.
+Opened hours after the Aug 14 2026 release. Within the first day the community grew it into a living record: **ten machines, eight contributors, every GPU vendor, and three tuning rules nobody knew at launch** — see [Community numbers](#community-numbers).
 
 ## The numbers
+
+The two founding rows, measured the night of the drop. The full living table (10 machines, all vendors) lives in [Community numbers](#community-numbers).
 
 | Card | Baseline | With the flag | Gain | Acceptance |
 |---|---|---|---|---|
@@ -43,6 +45,14 @@ Swept on the 5090 mobile, same method:
 | 4 | 47.3 | 60.2 | 33.4 | 0.65 |
 
 Acceptance decays as you draft deeper and prose pays for it first. Run 2 as your daily, 3 if your session is pure code.
+
+## The three rules the community found
+
+Discovered by contributors in the table within the first day, each detailed in their sections below:
+
+1. **The n-max sweet spot is card-dependent.** 24GB cards peak at n-max 2, the 48GB A6000 peaked at 4 ([@lingster](https://github.com/lingster)). Bigger cards absorb deeper verification before acceptance decay eats the win.
+2. **`--spec-draft-p-min` is the second knob.** A confidence gate (~0.60) stops the head drafting when it's unsure, which makes deeper n-max nearly free instead of harmful ([@tomertec](https://github.com/tomertec)).
+3. **The gain scales with generation length.** Under ~400 output tokens the spec overhead can dominate; at 4096 tokens the same setup ran +60% ([@Spadav](https://github.com/Spadav)). Long work benefits most.
 
 ## How it works
 
