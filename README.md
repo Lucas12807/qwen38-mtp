@@ -74,7 +74,7 @@ Ran the A/B on your card? Open a PR and add a row.
 |---|---|---|---|---|---|
 | RTX 3090 24GB | 31.0 | 41.3 | 2 | 0.78 | [@sudoingX](https://x.com/sudoingX) |
 | RTX 5090 mobile 24GB | 36.7 | 50.9 | 2 | 0.79 | [@sudoingX](https://x.com/sudoingX) |
-| RTX A6000 48GB (Ada) | 26.7 | 52.5 | 2 | n/a | [@lingster](https://github.com/lingster) |
+| RTX A6000 48GB (Ada) | 26.7 | 52.5 | 2 | 0.54-0.98 | [@lingster](https://github.com/lingster) |
 
 \* A6000 row: unsloth Q8_K_XL, 256K context, q8_0 KV cache — 40.0 GB VRAM baseline, 41.4 GB with spec (rows above: Q4_K_M, 131K, q4_0 KV).
 
