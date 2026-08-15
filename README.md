@@ -48,7 +48,7 @@ Acceptance decays as you draft deeper and prose pays for it first. Run 2 as your
 
 ## The three rules the community found
 
-Discovered by contributors in the table within the first day, each detailed in their sections below:
+Discovered by contributors in the table within the first day, detailed in the sections and footnotes below:
 
 1. **The n-max sweet spot is card-dependent.** 24GB cards peak at n-max 2, the 48GB A6000 peaked at 4 ([@lingster](https://github.com/lingster)). Bigger cards absorb deeper verification before acceptance decay eats the win.
 2. **`--spec-draft-p-min` is the second knob.** A confidence gate (~0.60) stops the head drafting when it's unsure, which makes deeper n-max nearly free instead of harmful ([@tomertec](https://github.com/tomertec)).
@@ -100,8 +100,8 @@ Ran the A/B on your card? Open a PR and add a row.
 \* RX 9070 row: two 16GB cards on one 31.84 GiB pool, Vulkan build b10426, unsloth UD-Q4_K_XL, **262K context**, q8_0 KV cache — 28.0 GiB across the pool with spec. Method differs from the rows above and is spelled out under the sweep below.
 \* R9700 row: unsloth UD-Q4_K_XL, 262K context, q4_0 KV cache, llama.cpp b10433, Vulkan/RADV — 22.53 GB VRAM baseline, 24.55 GB with n-max 2. Method: unchanged `probe.py` at commit `67c20536`, three runs x three prompts, thinking off.
 \* Ryzen AI Max+ 395 row: 64GB unified memory, unsloth UD-Q4_K_XL, 32K context, q8_0 KV cache, llama.cpp b10437, Windows build 26200, Vulkan with AMD driver 32.0.31035.1003. Method: unchanged `probe.py` at commit `67c2053`, three runs x three prompts, thinking off.
+\* RTX 4090 Spadav_ row: unsloth Q4_K_M, 200K context, q4_0 KV cache, q8_0 draft KV, mmproj loaded (888MB on GPU) — method: stock probe.py + 4096-token curl (MTP crossover: overhead dominates at ≤400 tokens, +60% at 4096 tokens).
 
-* RTX 4090 Spadav_ row: unsloth Q4_K_M, 200K context, q4_0 KV cache, q8_0 draft KV, mmproj loaded (888MB on GPU) — method: stock probe.py + 4096-token curl (MTP crossover: overhead dominates at ≤400 tokens, +60% at 4096 tokens).
 ### A6000 48GB: n-max sweep
 
 Same A6000, same config as the row above, `--spec-draft-n-max` swept 2-6. Overall and per-prompt probe medians (tok/s), draft acceptance from the server log:
