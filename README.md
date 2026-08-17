@@ -615,7 +615,7 @@ throughput. Python reaches 149.9 tok/s at n-max 7, but that is only 1.7% above
 n-max 5 and comes with lower prose throughput, lower aggregate acceptance,
 and greater run-to-run variance.
 
-## 2× Tesla P40 24GB (tensor split): n-max sweep on Pascal
+### 2× Tesla P40 24GB (tensor split): n-max sweep on Pascal
 
 Same box as the row above — two P40s (sm_61, 732 GB/s each, no P2P, separate NUMA nodes), unsloth UD-Q5_K_XL, 131K context, q4_0 KV, `--tensor-split 1,1` under `numactl --interleave=all`, `--parallel 1`, thinking off. `probe.py` unchanged, medians of three runs x three prompts, only the spec flags changing between arms. Draft acceptance from the server log:
 
