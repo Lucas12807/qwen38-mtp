@@ -8,6 +8,6 @@ A mergeable PR has:
 2. **One footnote** (`\* ` prefix, matching the block): quant + repo, context size, KV cache type, llama.cpp build, OS/backend, VRAM before and after, and your method (`probe.py` unchanged at a stated commit is the default; if your method differs, say exactly how).
 3. **Both arms at `--parallel 1`** (rule 5: a parallel-2 baseline reads ~20% low and inflates your gain).
 4. Medians of at least 3 runs. Single-run screens belong in prose, labeled as screens (rule from the RX 9070 section: n=1 crowned the wrong arm).
-5. Sweeps, findings, and analysis go in a `###` section under the table. Honest caveats raise the odds of a merge, they never lower them.
+5. Sweeps, findings, and analysis go in `sweeps/<card-family>.md` (see the [sweeps index](sweeps/README.md)), the README stays row plus footnote only. Honest caveats raise the odds of a merge, they never lower them.
 
 README.md only. No scripts, no binaries. Edits to other contributors' rows don't merge.
