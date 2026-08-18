@@ -182,7 +182,7 @@ Code still climbs more than prose (105.2 vs 79.2), same shape as the other tenso
 
 
 ### 2× RTX A5000 24GB NVLink: split mode beats the flag, and a Q4_K_M with no MTP head
-*by [@TheRiotCoder](https://github.com/TheRiotCoder), PR #NN*
+*by [@TheRiotCoder](https://github.com/TheRiotCoder), PR #57*
 
 The table's first NVLink pair. Two RTX A5000 24GB on an NV4 bridge (~112 GB/s),
 Threadripper PRO 5965WX, 128 GB RAM, headless Ubuntu 24.04, driver 595-open, CUDA 13.3,
