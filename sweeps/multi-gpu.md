@@ -283,25 +283,42 @@ plateau, not a ranking**, and a single `probe.py` invocation cannot order them �
 adding to the method notes alongside @dcrey7's medians-of-three rule, since the deeper the
 draft the more passes it takes to say anything.
 
-#### Cross-engine footnote: the same MTP weights are a 27% *regression* on vLLM
+#### Method warning: `probe.py` counts SSE events, which is engine-specific
 
-Not comparable to the table above — different quant, different engine — but relevant, since
-"the MTP head is free speed" turns out to be engine-specific.
+I first reported a 27% *regression* from the same MTP weights under vLLM. **That was
+wrong, and the cause is worth everyone's attention: `probe.py` counts streamed SSE delta
+events, not tokens.** That is exactly right for llama.cpp and silently wrong for engines
+that pack multiple accepted tokens into one chunk.
 
-Serving `cyankiwi/Qwen3.8-27B-AWQ-INT4` TP=2 on the same pair, two compose files differing
-**only** by `--speculative-config`, driven by the same `probe.py`:
+Measured on the same box, same prompt, comparing `probe.py`'s event count against
+`usage.completion_tokens` from `stream_options: {"include_usage": true}`:
 
-| Config | Median tok/s |
-|---|---:|
-| AWQ-INT4, no speculation | 59.6 |
-| AWQ-INT4 + `qwen3_5_mtp`, n=1 | **43.4 (−27%)** |
+| Engine / arm | SSE delta events | real tokens | tokens per chunk | by chunks | by tokens |
+|---|---:|---:|---:|---:|---:|
+| llama.cpp spec off | 358 | 359 | **1.00** | 52.8 | 53.0 |
+| llama.cpp MTP n-max 2 | 400 | 400 | **1.00** | 91.5 | 91.5 |
+| llama.cpp MTP n-max 8 | 336 | 337 | **1.00** | 146.7 | 147.2 |
+| vLLM 0.25.1 + MTP | 199 | 395 | **1.98** | 33.1 | 65.8 |
 
-Reproduced twice, 43.4 both times against 59.6/59.5 baseline. Draft quality is not the
-cause — vLLM logs 89.8% acceptance at mean length 1.90. At 1.90 accepted tokens/step and
-43.4 tok/s the engine runs ~22.8 steps/s against the baseline's ~59.6, so each MTP step
-costs 2.6x a baseline step. vLLM warns on startup that it clamped `max_num_scheduled_tokens`
-to 2048 because speculation is on; raising `max_num_batched_tokens` is the obvious next
-experiment and **has not been run**, so treat −27% as provisional.
+**llama.cpp emits one token per chunk in every arm, so every number in this repo is
+safe** — `probe.py` is a correct instrument for the engine it was written against, spec
+on or off. vLLM batches the accepted draft token together with the verified token, so
+`probe.py` reads it at roughly half rate.
 
-On this hardware llama.cpp with the flag is **1.6x the best vLLM number**, which reverses
-the engine ranking this rig had recorded before the sweep.
+Corrected vLLM figures for this box, counting tokens rather than chunks, thinking off:
+
+| Config | single stream | np=8 aggregate | np=16 aggregate |
+|---|---:|---:|---:|
+| AWQ-INT4, no speculation | 60.0 | 386 | 700 |
+| AWQ-INT4 + MTP | **78.5 (+31%)** | **503 (+30%)** | **776 (+11%)** |
+
+So MTP pays on vLLM too. Two knobs that looked promising did nothing: raising
+`--max-num-batched-tokens` to 8192/16384 cleared vLLM's
+`max_num_scheduled_tokens is set to 2048` warning but moved throughput not at all
+(43.5 → 43.5 → 43.5 by the chunk metric), and neither did dropping `--max-num-seqs` to 8
+or renaming the deprecated `qwen3_5_mtp` method to `mtp`. The clamp warning is a red
+herring; the metric was the problem.
+
+**The transferable lesson:** before comparing two engines with a streaming client, check
+tokens-per-chunk on each. One line of `stream_options: {"include_usage": true}` settles
+it, and without it a speculative-decoding gain can read as a loss.
