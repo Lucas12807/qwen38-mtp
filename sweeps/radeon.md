@@ -116,7 +116,7 @@ What this section adds:
 
 
 ### RX 7900 XTX 24GB (Windows/Vulkan): first Windows XTX A/B
-*by [@pparuzel](https://github.com/pparuzel), PR #XX*
+*by [@pparuzel](https://github.com/pparuzel), PR #53*
 
 Single RX 7900 XTX 24GB on Windows 11, official `ggml.llamacpp` WinGet build 9553 (`9e3b928fd`, Clang 19.1.5) with the Vulkan backend — no ROCm installed; the AMD driver runs the iGPU too, but the serve is Vulkan0 (XTX) only. unsloth UD-Q4_K_XL, 131K context, q4_0 KV cache (K and V), flash attention on, `--parallel 1` both arms, thinking off, host Ryzen 7 9800X3D. Spec arm: `--spec-type draft-mtp --spec-draft-n-max 2` (ungated, p-min 0.00). Method: unchanged `probe.py` at `c7bc415`, three runs x three prompts, warmup discarded.
 
