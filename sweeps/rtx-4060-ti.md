@@ -2,54 +2,47 @@
 
 Contributor-authored deep dives for Qwen3.8-27B MTP on the RTX 4060 Ti 16GB (Ada, SM 89, 288 GB/s).
 
-### RTX 4060 Ti 16GB: the slowest single card in the table — draft depth plateaus at n-max 2-3
+### RTX 4060 Ti 16GB: the slowest single card in the table — n-max 3 pays, n-max 4 OOMs
 *by [@CeIest2](https://github.com/CeIest2)*
 
 First single-RTX-4060-Ti row, and the lowest-bandwidth single card in the table (288 GB/s —
-the 5060 Ti row sits at 448 GB/s). Runs **quimmedes/Qwen3.8-27B-XYZ Q4-XYZ** (v1, 15,194,248,512 B
-= 14.15 GiB, sha256 58f6975a5b5707ee…; ~120 MiB larger than the Q4-XYZ-v2 file in the 5060 Ti row) at
-**32K context** with a **q4_0 KV cache**.
+the 5060 Ti row sits at 448 GB/s). Runs **quimmedes/Qwen3.8-27B-XYZ Q4-XYZ-v2** (15,064,569,440 B
+= 14.03 GiB, sha256 ab58f29fa81dd604…) — the same file as the 5060 Ti row, making this a
+controlled cross-card pair — at **32K context** with a **q4_0 KV cache**.
 
 Host: Ubuntu 24.04.4, driver 580.173.02 (CUDA 13.0), 31 GB RAM. llama.cpp master `9a286ac`
-(2026-08-21) built from source with CUDA 12.8, `-DCMAKE_CUDA_ARCHITECTURES=89`. Benched with the
-desktop nearly idle (246 MiB GPU footprint, no compositor spill — rule 7).
+(2026-08-21) built from source with CUDA 12.8, `-DCMAKE_CUDA_ARCHITECTURES=89`. Desktop session
+during the bench but nearly idle (240-290 MiB GPU footprint, no compositor spill — rule 7).
 
 | n-max | p-min | tok/s (median) | tok/s (mean) | acceptance | VRAM (MiB) |
 |---|---:|---:|---:|---:|---:|
-| off | — | 17.8 | 17.6 | — | 14,405 |
-| 2 | 0.00 | **34.8** | 32.4 | 0.50–0.93 | 15,150 |
-| 3 | 0.00 | 34.9 | 32.8 | 0.34–0.88 | 15,284 |
-| 4 | 0.00 | 34.4 | 34.5 | 0.31–0.87 | 15,471 |
-| 4 | 0.70 | 33.2 | 33.3 | 0.57–0.95 | 15,455 |
+| off | — | 17.6 | 17.5 | — | 14,778 |
+| 2 | 0.00 | 35.9 | 34.9 | 0.54–0.96 | 15,678 |
+| 3 | 0.00 | **40.0** | 40.2 | 0.41–0.94 | 15,830 |
+| 4 | 0.00 | OOM — did not load | — | — | — |
+| 3 | 0.70 | 39.8 | 37.5 | 0.72–0.98 | 15,833 |
 
-Per-prompt medians across the depth sweep (code / prose / bash):
-
-| n-max | code | prose | bash |
-|---|---:|---:|---:|
-| off | 17.7 | 17.8 | 17.8 |
-| 2 | 36.3 | 27.4 | 34.8 |
-| 3 | 40.6 | 25.1 | 34.9 |
-| 4 | 45.1 | 24.0 | 34.4 |
+Per-prompt medians (code / prose / bash): baseline 17.6 / 17.6 / 17.5 — n2 40.6 / 29.4 / 35.9 —
+n3 49.0 / 32.3 / 40.0 — n3+pmin 47.3 / 26.8 / 39.8.
 
 **Findings:**
 
-1. **Draft depth plateaus where the 5060 Ti keeps climbing.** The 5060 Ti (448 GB/s) gained at
-   every step to n-max 4 (50.0 → 53.6 → 59.3); this card is flat from n-max 2 (34.8 → 34.9 →
-   34.4, all within noise). The per-prompt split explains it: code keeps paying (36.3 → 40.6 →
-   45.1) while prose loses symmetrically (27.4 → 25.1 → 24.0), and bash is flat. At 288 GB/s the
-   extra verify cost of deep drafts exactly cancels the code gain. n-max 2 is the sweet spot here,
-   matching rule 1's card-dependence.
-2. **p-min gating hurts here too, only milder.** The 0.70 gate at n-max 4 raised acceptance
-   (0.31–0.87 → 0.57–0.95) but cost 3.5% throughput (34.4 → 33.2) — same direction as the 5060
-   Ti's −11.5%, smaller magnitude. Rule 2's "helps starved cards" does not materialize even at
-   288 GB/s on this arch; the inversion point sits somewhere below this card, not at it.
-3. **n-max 4 fits at 94.5% VRAM on this file** (15,471 / 16,380 MiB) — no OOM, unlike the
-   IQ4_XS file on the 5060 Ti. The ~1 GiB gap between this 14.15 GiB file and unsloth's Q4_K_M
-   is what buys the whole MTP context; the file fitting is still the load-bearing choice for
-   16 GB owners (finding 4 of the 5060 Ti sweep holds).
-4. **The baseline scales with bandwidth.** 17.8 tok/s spec-off vs the 5060 Ti's 26.3 on the
-   sibling quant — a 0.68 ratio against a 0.64 bandwidth ratio; the baseline is fully
-   bandwidth-bound, and the +95% flag gain is the durable part.
+1. **Depth still pays at n-max 3, then VRAM runs out.** n2 → n3 gains +11% overall
+   (35.9 → 40.0), carried by every prompt. n-max 4 OOMs at load, reproducibly: the same 130 MiB
+   `cudaMalloc failed: out of memory` request the 5060 Ti hit at n-max 6, and reducing batch to
+   `-b 512 -ub 512` does not save it. n-max 3 sits at 15,830/16,380 MiB (96.6%) with a ~280 MiB
+   desktop — n-max 4 is the hard ceiling here, one step earlier than the 5060 Ti (which held
+   n-max 4 at 99.1% headless).
+2. **Controlled pair against the 5060 Ti row (same file, same 32K/q4_0 KV).** Baseline scales
+   with bandwidth: 17.6 vs 26.3, a 0.67 ratio against a 0.64 bandwidth ratio — fully
+   bandwidth-bound spec-off. With the flag: 40.0 vs 59.5 at each card's own ceiling (n3 vs n4).
+   The +127% gain on this card is larger than the 5060 Ti's +126% at its peak — the slower the
+   card, the more the flag is worth.
+3. **p-min gating is a wash at the ceiling, not a cost.** The 0.70 gate at n-max 3 costs 0.5%
+   (40.0 → 39.8, within noise) while lifting acceptance to 0.72–0.98 — against the 5060 Ti's
+   −11.5% at n-max 4 and the v1 file's −3.5% on this same card (section below). Rule 2's
+   inversion point really does sit near this bandwidth class; at 288 GB/s the gate is roughly
+   break-even, and the higher acceptance makes it the safer daily driver.
 
 **Method:** unchanged `probe.py` at commit `c7bc415`, three runs x three prompts (python merge,
 mmap-vs-read, bash watcher), 400 tokens, thinking off, warmup discarded. Both arms `--parallel 1`;
@@ -59,7 +52,39 @@ tasks, warmup excluded).
 
 **Honest caveats:**
 - **32K context**, not the repo-standard 131K — a Q4-tier file cannot hold 131K on one 16 GB card.
-- This is the Q4-XYZ **v1** file, not the v2 of the 5060 Ti row — the two rows are not
-  file-identical, so cross-card deltas are bandwidth inferences, not controlled A/Bs.
-- Single 3-run passes per arm (probe.py's own medians-of-3); the n2/n3/n4 overall medians sit
-  within ~1.5% of each other, i.e. the plateau is real but the ordering of the three arms is noise.
+- Benched in a live desktop session, not headless. The 5060 Ti row ran compositor-free; the
+  ~280 MiB desktop footprint here is part of why n-max 4 OOMs on this card. Baseline probe runs
+  were flat to ±0.5% (17.5-17.7), so no spill is suspected during measurement.
+- Single 3-run pass per arm; the n3 vs n3+pmin delta (0.5%) is inside run-to-run noise.
+
+### Q4-XYZ v1 vs v2 on the same card: the quant version changes the n-max curve
+*by [@CeIest2](https://github.com/CeIest2)*
+
+The first pass on this card ran the older **Q4-XYZ v1** file (15,194,248,512 B = 14.15 GiB,
+sha256 58f6975a5b5707ee…) — same host, same llama.cpp build `9a286ac`, same 32K/q4_0 KV config,
+same method, one day earlier. Only the GGUF differs.
+
+| n-max | p-min | v1 tok/s (median) | v2 tok/s (median) |
+|---|---:|---:|---:|
+| off | — | 17.8 | 17.6 |
+| 2 | 0.00 | 34.8 | 35.9 |
+| 3 | 0.00 | 34.9 | 40.0 |
+| 4 | 0.00 | 34.4 | OOM |
+| 4 / 3 | 0.70 | 33.2 (n4) | 39.8 (n3) |
+
+**Findings:**
+
+1. **Baselines are identical (17.8 vs 17.6, within noise)** — the ~130 MiB file-size difference
+   buys nothing spec-off, as expected for a bandwidth-bound decode.
+2. **The n-max curve shape changes with the quant version.** On v1 the overall median is flat
+   from n-max 2 (34.8 / 34.9 / 34.4 — code gains, prose loses symmetrically); on v2, n-max 3
+   clearly pays (+11% over n2) and n-max 4 OOMs. Same silicon, same build, same flags — the
+   draft-quality difference between the two quant versions moves the depth optimum by a full
+   step. Rule 1's "re-sweep after any config change" extends to the quant file itself.
+3. **v1 fits n-max 4 (15,471 MiB, 94.5%) where v2 OOMs** — the smaller file needs *more* room
+   for the MTP context, not less. Counter-intuitive, reproducible (two load attempts, one with
+   reduced batch), worth knowing before assuming file size predicts headroom.
+
+Caveat: the two passes ran a day apart in two desktop sessions (v1 at 246 MiB desktop footprint,
+v2 at ~280 MiB). Within-file A/Bs are same-session; cross-file deltas share host and build but
+not session, and part of the v2 n-max-4 OOM may be the slightly larger desktop footprint.
