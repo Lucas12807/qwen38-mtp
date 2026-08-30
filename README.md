@@ -127,6 +127,7 @@ Ran the A/B on your card? Open a PR and add a row.
 | Ryzen AI Max+ 395 / Radeon 8060S 64GB (Linux, Vulkan/RADV) | 11.9 | 28.7 | 4 | 0.30-0.92 | [@Nathanw1014](https://github.com/Nathanw1014) |
 | RTX 5090 32GB (UD-Q4_K_XL **Dynamic 3.0**, 192K) | 74.7 | 160.8 | 4 | 0.86-0.93 | [@paulomcg](https://github.com/paulomcg) |
 | RTX 5080 16GB | 53.4 | 101.3 | 2 | 0.53–0.95 | [@ChumBoxBaron](https://github.com/ChumBoxBaron) |
+| RTX 4060 Ti 16GB (Q4-XYZ-v2, 32K) | 17.6 | 40.0 | 3 | 0.41-0.94 | [@CeIest2](https://github.com/CeIest2) |
 
 \* A6000 row: unsloth Q8_K_XL, 256K context, q8_0 KV cache — 40.0 GB VRAM baseline, 41.4 GB with spec (rows above: Q4_K_M, 131K, q4_0 KV).
 \* RX 7900 XTX row: unsloth Q4_K_M, 131K context, q4_0 KV cache — 18.9 GB VRAM baseline, 19.7 GB with spec.
@@ -185,10 +186,11 @@ Ran the A/B on your card? Open a PR and add a row.
 \* RTX 5090 Dynamic 3.0 row: unsloth UD-Q4_K_XL **Dynamic 3.0** (sha256 `3f227079003add2511437e5b1e94812e363385225bf6a9b47b0054a72bc8b01e`, re-quantized and re-uploaded 2026-08-19), 192K context, q8_0 KV cache, mmproj-BF16 loaded, llama.cpp `3d93885` as shipped in the llama-swap `unified-cuda-2026-08-14` image, Linux/CUDA, headless (desktop moved off this card to the iGPU). VRAM 25,199 MiB baseline / 27,169 MiB at n-max 4. Method: unchanged `probe.py` at `b299c0f`, three runs x three prompts, thinking off, `--parallel 1` both arms, ungated (no `--spec-draft-p-min`); each cell run twice in opposite arm order for 18 runs total, medians over all 18. Every arm gated on 60s of sustained idle GPU first — a contended first attempt gave a 2x spread inside one prompt and was discarded. Acceptance is two single-request samples (226/244, 151/176), not a distribution. Different rig, OS and method from my Windows row above; the two are not comparable to each other. Dynamic 2.0 vs 3.0 A/B in [sweeps/rtx-5090.md](sweeps/rtx-5090.md).
 \* RTX 5080 16GB: unsloth Qwen3.8-27B Q3_K_M, ctx 65536, KV q4_0+q4_0, llama.cpp b10488, Windows 11 Pro / CUDA 13.3, VRAM 48 MiB idle → 14,445 MiB baseline / 15,359 MiB MTP, probe.py unchanged @master (both arms), `--parallel 1`, flash-attn on, thinking off.
 
+\* RTX 4060 Ti 16GB row: quimmedes/Qwen3.8-27B-XYZ Q4-XYZ-v2 (15,064,569,440 B, sha256 ab58f29fa81dd604… — same file as the 5060 Ti row above, making the two a controlled cross-card pair: 288 vs 448 GB/s), 32K context, q4_0 KV cache (both K and V), llama.cpp master `9a286ac` (2026-08-21) built from source with CUDA 12.8 (`-DCMAKE_CUDA_ARCHITECTURES=89`), Ubuntu 24.04 / CUDA, driver 580.173.02, desktop nearly idle during bench (~280 MiB GPU footprint). Method: unchanged `probe.py` at `c7bc415`, three runs x three prompts, thinking off, `--parallel 1` both arms. VRAM 14,778 MiB baseline / 15,830 MiB at n-max 3. Full n-max sweep (2/3/4 + p-min 0.70) and a Q4-XYZ v1-vs-v2 study in [sweeps/rtx-4060-ti.md](sweeps/rtx-4060-ti.md): depth pays to n-max 3 (+11% over n2), n-max 4 OOMs at load (same 130 MiB shortfall as the 5060 Ti's n-max 6, also with `-b 512 -ub 512`), p-min 0.70 gating is a wash at the ceiling (−0.5%, acceptance 0.72-0.98), and the quant version alone moves the depth optimum by a full step on identical silicon and build.
 
 ### Deep dives
 
-Every contributor sweep and study is in [sweeps/](sweeps/), grouped by card family and PR-able like the table: [RTX 5090](sweeps/rtx-5090.md) · [RTX 3090](sweeps/rtx-3090.md) · [Radeon](sweeps/radeon.md) · [APUs and iGPUs](sweeps/apu-igpu.md) · [Multi-GPU](sweeps/multi-gpu.md) · [Workstation](sweeps/workstation.md) · [RTX 5060 Ti](sweeps/rtx-5060-ti.md) · [Apple Silicon](sweeps/apple-silicon.md) · [CMP 170HX](sweeps/cmp-170hx.md)
+Every contributor sweep and study is in [sweeps/](sweeps/), grouped by card family and PR-able like the table: [RTX 5090](sweeps/rtx-5090.md) · [RTX 3090](sweeps/rtx-3090.md) · [Radeon](sweeps/radeon.md) · [APUs and iGPUs](sweeps/apu-igpu.md) · [Multi-GPU](sweeps/multi-gpu.md) · [Workstation](sweeps/workstation.md) · [RTX 5060 Ti](sweeps/rtx-5060-ti.md) · [RTX 4060 Ti](sweeps/rtx-4060-ti.md) · [Apple Silicon](sweeps/apple-silicon.md) · [CMP 170HX](sweeps/cmp-170hx.md)
 
 ## License
 
