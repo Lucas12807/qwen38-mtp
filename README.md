@@ -126,7 +126,7 @@ Ran the A/B on your card? Open a PR and add a row.
 | 2× RTX A5000 24GB (NVLink, TP) | 51.9 | 81.1 | 2 | 0.56-0.96 | [@TheRiotCoder](https://github.com/TheRiotCoder) |
 | Ryzen AI Max+ 395 / Radeon 8060S 64GB (Linux, Vulkan/RADV) | 11.9 | 28.7 | 4 | 0.30-0.92 | [@Nathanw1014](https://github.com/Nathanw1014) |
 | RTX 5090 32GB (UD-Q4_K_XL **Dynamic 3.0**, 192K) | 74.7 | 160.8 | 4 | 0.86-0.93 | [@paulomcg](https://github.com/paulomcg) |
-| RTX 5080 16GB | 53.4 | 101.3 | 2 | 0.53–0.95 | [@ChumBoxBaron](https://github.com/ChumBoxBaron) |
+| RTX 5080 16GB | 53.4 | 101.3 | 2 | 0.53-0.95 | [@ChumBoxBaron](https://github.com/ChumBoxBaron) |
 | RTX 4060 Ti 16GB (Q4-XYZ-v2, 32K) | 17.6 | 40.0 | 3 | 0.41-0.94 | [@CeIest2](https://github.com/CeIest2) |
 
 \* A6000 row: unsloth Q8_K_XL, 256K context, q8_0 KV cache — 40.0 GB VRAM baseline, 41.4 GB with spec (rows above: Q4_K_M, 131K, q4_0 KV).
